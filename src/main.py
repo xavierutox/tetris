@@ -108,6 +108,8 @@ class Main:
         self.game = Game(self.random_bag, self.pieces, self.get_level, self.get_combo, self.get_lines, self.update_level, self.update_lines, self.update_score, self.update_combo)
         self.score = Score(self.get_level, self.get_lines, self.get_score, self.get_combo)
         self.store = Store()
+        pygame.mixer.music.load('music.mp3')
+        pygame.mixer.music.play(-1)
         
 if __name__ == "__main__":
     main = Main()
