@@ -1,5 +1,6 @@
 from settings import *
 from sys import exit
+from random import choice
 
 # Panels
 from panels.game import Game
@@ -16,10 +17,21 @@ class Main:
         pygame.display.set_caption("Tetris")
         
         # panels
-        self.game = Game()
+        self.pieces = self.random_bag()
+        self.preview = Preview(self.pieces)
+        self.game = Game(self.random_bag, self.pieces)
         self.score = Score()
         self.store = Store()
-        self.preview = Preview()
+        
+    
+    def random_bag(self):
+        bag = ['I', 'J', 'L', 'O', 'S', 'T', 'Z']
+        selected = []
+        while len(bag) > 0:
+            selected.append(choice(bag))
+            bag.remove(selected[-1])
+        self.pieces = selected
+        return selected
         
     def run(self):
         while True:
@@ -34,6 +46,7 @@ class Main:
             self.score.run()
             self.store.run()
             self.preview.run()
+            self.preview.update_pieces(self.pieces)
             
             
             pygame.display.update()

@@ -1,15 +1,15 @@
 from settings import *
-from random import choice
 from timer import Timer
 
 class Game:
-    def __init__(self):
+    def __init__(self, random_bag, pieces):
         
         self.surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
         self.display_surface = pygame.display.get_surface()
         self.sprites = pygame.sprite.Group()
         self.level = 1
-        self.next_pieces = self.random_bag()
+        self.random_bag = random_bag
+        self.next_pieces = pieces
         self.field_data = [[0 for x in range(COLUMNS)] for y in range(LINES)]
         self.time = (0.8 - ((self.level - 1) * 0.007)) ** (self.level - 1) * 1000
         self.spawn_tetromino()
@@ -29,18 +29,7 @@ class Game:
     
     def move_down(self):
         self.tetromino.move_down()
-    
-    def random_bag(self):
-        bag = ['I', 'J', 'L', 'O', 'S', 'T', 'Z']
-        #bag = ['O']
-        selected = []
-        while len(bag) > 0:
-            selected.append(choice(bag))
-            bag.remove(selected[-1])
-        
-        return selected
-        
-        
+
     def run(self):
         self.surface.fill(PANEL_BACKGROUND_COLOR)
         self.sprites.draw(self.surface)
