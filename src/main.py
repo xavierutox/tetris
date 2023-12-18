@@ -18,15 +18,17 @@ class Main:
         
         # score
         
-        self.level = 1
-        self.lines = 0
-        self.score = 0
+        self.level_counter = 1
+        self.lines_counter = 0
+        self.score_counter = 0
+        self.combo_counter = -1
+        self.max_score = 0
         
         # panels
         self.pieces = self.random_bag()
         self.preview = Preview(self.pieces)
-        self.game = Game(self.random_bag, self.pieces, self.get_level, self.update_level, self.update_lines, self.update_score)
-        self.score = Score(self.get_level, self.get_lines, self.get_score)
+        self.game = Game(self.random_bag, self.pieces, self.get_level, self.get_combo, self.get_lines, self.update_level, self.update_lines, self.update_score, self.update_combo)
+        self.score = Score(self.get_level, self.get_lines, self.get_score, self.get_combo)
         self.store = Store()
         
        
@@ -42,22 +44,28 @@ class Main:
         return selected
 
     def get_score(self):
-        return self.score
+        return self.score_counter
     
     def get_level(self):
-        return self.level
+        return self.level_counter
     
     def get_lines(self):
-        return self.lines
+        return self.lines_counter
+    
+    def get_combo(self):
+        return self.combo_counter
     
     def update_score(self, score):
-        self.score += score
+        self.score_counter += score
         
     def update_level(self, level):
-        self.level += level
+        self.level_counter += level
         
     def update_lines(self, lines):
-        self.lines += lines
+        self.lines_counter += lines
+    
+    def update_combo(self, combo):
+        self.combo_counter = combo
 
 
     def run(self):
@@ -75,9 +83,26 @@ class Main:
             self.preview.run()
             self.preview.update_pieces(self.pieces)
             
+            self.input()
             
             pygame.display.update()
             self.clock.tick()
+    
+    def input(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_r]:
+            self.restart()
+    
+    def restart(self):
+        self.level_counter = 1
+        self.lines_counter = 0
+        self.score_counter = 0
+        self.combo_counter = -1
+        self.pieces = self.random_bag()
+        self.preview = Preview(self.pieces)
+        self.game = Game(self.random_bag, self.pieces, self.get_level, self.get_combo, self.get_lines, self.update_level, self.update_lines, self.update_score, self.update_combo)
+        self.score = Score(self.get_level, self.get_lines, self.get_score, self.get_combo)
+        self.store = Store()
         
 if __name__ == "__main__":
     main = Main()
