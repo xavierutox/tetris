@@ -20,7 +20,6 @@ class Preview:
         self.surface.fill(PANEL_BACKGROUND_COLOR)
         self.sprites.draw(self.surface)
         self.display_surface.blit(self.surface, (3*PADDING + GAME_WIDTH + TOP_LEFT_PANEL_WIDTH, PADDING))
-        self.sprites.update()
         self.delete_preview()
         
         
@@ -61,13 +60,10 @@ class Block(pygame.sprite.Sprite):
         self.OFFSET = pygame.Vector2(0, 0)
         self.index = index
         if index == 0:
-            self.OFFSET = PREVIEW_1_POS_OFFSET + pygame.Vector2(1, 0)*PADDING
+            self.OFFSET = PREVIEW_1_POS_OFFSET + pygame.Vector2(1, 3)*PADDING
         elif index == 1:
-            self.OFFSET = PREVIEW_2_POS_OFFSET + pygame.Vector2(1, 0)*PADDING
+            self.OFFSET = PREVIEW_2_POS_OFFSET + pygame.Vector2(1, 3)*PADDING
         elif index == 2:
-            self.OFFSET = PREVIEW_3_POS_OFFSET + pygame.Vector2(1, 0)*PADDING
+            self.OFFSET = PREVIEW_3_POS_OFFSET + pygame.Vector2(1, 3)*PADDING
         self.pos = pygame.Vector2(pos)*SQUARE_SIZE + self.OFFSET
         self.rect = self.image.get_rect(topleft=(self.pos.x,self.pos.y))
-        
-    def update(self):
-        self.rect.topleft = self.pos.x, self.pos.y

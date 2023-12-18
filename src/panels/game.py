@@ -2,12 +2,15 @@ from settings import *
 from timer import Timer
 
 class Game:
-    def __init__(self, random_bag, pieces):
+    def __init__(self, random_bag, pieces, get_level, update_level, update_lines, update_score):
         
         self.surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
         self.display_surface = pygame.display.get_surface()
         self.sprites = pygame.sprite.Group()
-        self.level = 1
+        self.level = get_level()
+        self.update_level = update_level
+        self.update_lines = update_lines
+        self.update_score = update_score
         self.random_bag = random_bag
         self.next_pieces = pieces
         self.field_data = [[0 for x in range(COLUMNS)] for y in range(LINES)]
