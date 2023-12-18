@@ -3,7 +3,7 @@ import pygame
 from timer import Timer
 
 class Game:
-    def __init__(self, random_bag, pieces, get_level, get_combo, get_lines, update_level, update_lines, update_score, update_combo):
+    def __init__(self, random_bag, pieces, get_level, get_combo, get_lines, update_level, update_lines, update_score, update_combo, get_stored_piece, set_stored_piece, set_max_score, get_max_score, restart, get_score):
         
         self.surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
         self.display_surface = pygame.display.get_surface()
@@ -14,14 +14,21 @@ class Game:
         self.update_lines = update_lines
         self.update_score = update_score
         self.update_combo = update_combo
+        self.set_max_score = set_max_score
+        self.get_max_score = get_max_score
+        self.get_score = get_score
+        self.restart = restart
         self.random_bag = random_bag
         self.next_pieces = pieces
         self.get_combo = get_combo
         self.get_lines = get_lines
+        self.get_stored_piece = get_stored_piece
+        self.set_stored_piece = set_stored_piece
         self.field_data = [[0 for x in range(COLUMNS)] for y in range(LINES)]
         self.time = (0.8 - ((self.get_level - 1) * 0.007)) ** (self.get_level - 1) * 1000
         self.spawn_tetromino()
         self.combo = -1
+        self.store_lock = False
         
         self.timers = {
             'vertical_move_timer': Timer(self.time, True, self.move_down),
@@ -55,6 +62,8 @@ class Game:
         if all([block.pos.y >= 0 for block in self.tetromino.blocks]):
             self.tetromino.hard_drop_ghost()
         
+        self.check_game_over()
+        
     def timer_update(self):
         for timer in self.timers.values():
             timer.update()
@@ -62,7 +71,7 @@ class Game:
     def spawn_tetromino(self):
         self.check_finished_lines()
         if len(self.next_pieces) == 0:
-            self.next_pieces = self.random_bag()
+            self.next_pieces = self.random_bag(self.get_stored_piece())
         self.tetromino = Tetromino(self.next_pieces.pop(), self.sprites, self.ghost_sprites, self.spawn_tetromino, self.field_data, self.update_score)
     
     def input(self):
@@ -88,11 +97,12 @@ class Game:
                 self.tetromino.clock_wise_rotation()
                 self.timers['key_timer'].activate()
             elif keys[pygame.K_c] or keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]:
+                self.handle_store()
                 self.timers['key_timer'].activate()
     
     def check_finished_lines(self):
         # delete ghost blocks
-        line_collitions_counter = 0
+        self.store_lock = False
         
         for block in self.ghost_sprites:
             block.kill()
@@ -125,9 +135,7 @@ class Game:
         
         # update lines
         self.update_lines(len(delete_rows))
-        # check if level up (10 lines)
-        if self.get_lines() % 10 == 0 and self.get_lines() != 0:
-            print('level up')
+        if self.get_lines() % 10 == 0 and self.get_lines() != 0 and len(delete_rows) != 0:
             self.update_level(1)
             self.time = (0.8 - ((self.get_level - 1) * 0.007)) ** (self.get_level - 1) * 1000
             self.timers['vertical_move_timer'].time = self.time
@@ -140,28 +148,57 @@ class Game:
                 perfect_clear = False
         
         if perfect_clear:
-            if line_collitions_counter == 1:
+            if len(delete_rows) == 1:
                 self.update_score(800 * self.get_level)
-            elif line_collitions_counter == 2:
+            elif len(delete_rows) == 2:
                 self.update_score(1200 * self.get_level)
-            elif line_collitions_counter == 3:
+            elif len(delete_rows) == 3:
                 self.update_score(1800 * self.get_level)
-            elif line_collitions_counter == 4:
+            elif len(delete_rows) == 4:
                 self.update_score(2000 * self.get_level)
         else:
         
-            if line_collitions_counter == 1:
+            if len(delete_rows) == 1:
                 self.update_score(100 * self.get_level)
-            elif line_collitions_counter == 2:
+            elif len(delete_rows) == 2:
                 self.update_score(300 * self.get_level)
-            elif line_collitions_counter == 3:
+            elif len(delete_rows) == 3:
                 self.update_score(500 * self.get_level)
-            elif line_collitions_counter == 4:
+            elif len(delete_rows) == 4:
                 self.update_score(800 * self.get_level)
         
         # combo
         if self.get_combo() > 0:
             self.update_score(50 * self.get_combo() * self.get_level)
+    
+    def handle_store(self):
+        if not self.store_lock:
+            self.store_lock = True
+            for block in self.ghost_sprites:
+                block.kill()
+                
+            if self.get_stored_piece() == None:
+                self.set_stored_piece(self.tetromino.shape)
+                for block in self.tetromino.blocks:
+                    block.kill()
+                
+                self.spawn_tetromino()
+            else: 
+                temp = self.tetromino.shape
+                for block in self.tetromino.blocks:
+                    block.kill()
+                self.tetromino = Tetromino(self.get_stored_piece(), self.sprites, self.ghost_sprites, self.spawn_tetromino, self.field_data, self.update_score)
+                self.set_stored_piece(temp)
+    
+    
+    def check_game_over(self):
+        first_row = self.field_data[0]
+        center = int(len(first_row)/2)
+        if any(first_row[center-1:center+2]):
+            if self.get_score() > self.get_max_score():
+                self.set_max_score(self.get_score())
+            self.restart()
+            
         
 
 class Tetromino:
