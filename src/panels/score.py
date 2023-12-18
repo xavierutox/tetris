@@ -1,4 +1,5 @@
-from settings import *
+from settings import TOP_LEFT_PANEL_FRACTION, TOP_LEFT_PANEL_HEIGHT, TOP_LEFT_PANEL_WIDTH, GRID_COLOR, PANEL_BACKGROUND_COLOR, PADDING, TEXT_COLOR
+import pygame
 
 class Score:
     def __init__(self, get_level, get_lines, get_score, get_combo):

@@ -1,4 +1,5 @@
-from settings import *
+from settings import RIGHT_PANEL_WIDTH, GAME_HEIGHT, GRID_COLOR, PANEL_BACKGROUND_COLOR, PADDING, TETROMINOS, SQUARE_SIZE, PREVIEW_1_POS_OFFSET, PREVIEW_2_POS_OFFSET, PREVIEW_3_POS_OFFSET, TOP_LEFT_PANEL_WIDTH, GAME_WIDTH
+import pygame
 
 class Preview:
     def __init__(self, pieces):

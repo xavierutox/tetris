@@ -1,4 +1,5 @@
-from settings import *
+from settings import WINDOWS_WIDTH, WINDOWS_HEIGHT, BACKGROUND_COLOR
+import pygame
 from sys import exit
 from random import choice
 

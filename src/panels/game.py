@@ -1,4 +1,5 @@
-from settings import *
+from settings import GAME_HEIGHT, GAME_WIDTH, GRID_COLOR, PANEL_BACKGROUND_COLOR, TOP_LEFT_PANEL_WIDTH, PADDING, SQUARE_SIZE, OFFSET, COLUMNS, LINES, MOVE_SLEEP_TIME, TETROMINOS
+import pygame
 from timer import Timer
 
 class Game:
@@ -90,8 +91,6 @@ class Game:
                 self.timers['key_timer'].activate()
     
     def check_finished_lines(self):
-        for line in self.field_data:
-            print(line)
         # delete ghost blocks
         line_collitions_counter = 0
         
@@ -300,6 +299,8 @@ class Tetromino:
                 return
             
         for block in self.blocks:
+            x = block.pos.x
+            y = block.pos.y
             # check if rotation is possible
             if block.pos.x - self.blocks[0].pos.y + y < 0 or block.pos.x - self.blocks[0].pos.y + y >= GAME_WIDTH:
                 return
