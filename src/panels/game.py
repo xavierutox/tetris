@@ -49,6 +49,7 @@ class Game:
         self.input()
         self.timer_update()
         self.sprites.update()
+        self.tetromino.hard_drop_ghost()
         
     def timer_update(self):
         for timer in self.timers.values():
@@ -88,6 +89,7 @@ class Tetromino:
         self.block_positions = TETROMINOS[shape]['shape']
         self.color = TETROMINOS[shape]['color']
         self.blocks = [Block(group, pos, self.color, field_data) for pos in self.block_positions]
+        self.preview = [Block(group, pos, self.color, field_data, True) for pos in self.block_positions]
         self.spawn_tetromino = spawn_tetromino
         self.field_data = field_data
     
@@ -101,19 +103,25 @@ class Tetromino:
             self.spawn_tetromino()
     
     def hard_drop(self):
-        if not self.vertical_collision():
-            while not self.vertical_collision():
-                self.move_down()
+        while not self.vertical_collision():
+            self.move_down()
     
     def move_left(self):
         if not self.horizontal_collision('left'):
+            self.reset_ghost_height()
             for block in self.blocks:
+                block.pos.x -= SQUARE_SIZE
+            for block in self.preview:
                 block.pos.x -= SQUARE_SIZE
     
     def move_right(self):
+        self.reset_ghost_height()
         if not self.horizontal_collision('right'):
             for block in self.blocks:
                 block.pos.x += SQUARE_SIZE
+            for block in self.preview:
+                block.pos.x += SQUARE_SIZE
+                
             
     def horizontal_collision(self, direction):
         for block in self.blocks:
@@ -135,16 +143,48 @@ class Tetromino:
             if block.pos.y + SQUARE_SIZE >= GAME_HEIGHT:
                 return True
             # field_data collition
-            if self.field_data[int(block.pos.y/SQUARE_SIZE) + 1][int(block.pos.x/SQUARE_SIZE)] == 1:
+            if self.field_data[int(block.pos.y/SQUARE_SIZE) + 1][int(block.pos.x/SQUARE_SIZE)] == 1 and block.pos.y >= 0:
+                return True
+        return False
+
+    def ghost_collision(self):
+        for block in self.preview:
+            if block.pos.y + SQUARE_SIZE >= GAME_HEIGHT:
+                return True
+            # field_data collition
+            if self.field_data[int(block.pos.y/SQUARE_SIZE) + 1][int(block.pos.x/SQUARE_SIZE)] == 1 and block.pos.y >= 0:
                 return True
         return False
     
+    def move_down_ghost(self):
+        if not self.ghost_collision():
+            for block in self.preview:
+                block.pos.y += SQUARE_SIZE
+        else:
+            for block in self.preview:
+                block.pos.y -= SQUARE_SIZE
+            return True
+    
+    def hard_drop_ghost(self):
+        while not self.ghost_collision():
+            self.move_down_ghost()
+    
+    def reset_ghost_height(self):
+        for block in self.preview:
+            block.pos.y = self.blocks[self.preview.index(block)].pos.y
+            
+    
+        
+    
     
 class Block(pygame.sprite.Sprite):
-        def __init__(self, group, pos, color, field_data):
+        def __init__(self, group, pos, color, field_data, ghost=False):
             super().__init__(group)
             self.image = pygame.Surface((SQUARE_SIZE, SQUARE_SIZE))
             self.image.fill(color)
+            self.ghost = ghost
+            if self.ghost:
+                self.image.set_alpha(30)
             self.pos = pygame.Vector2(pos)*SQUARE_SIZE + OFFSET
             self.rect = self.image.get_rect(topleft=(self.pos.x,self.pos.y))
             self.field_data = field_data
