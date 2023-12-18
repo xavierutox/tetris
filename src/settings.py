@@ -27,7 +27,7 @@ PADDING = 20
 WINDOWS_WIDTH = GAME_WIDTH + TOP_LEFT_PANEL_WIDTH + RIGHT_PANEL_WIDTH + 4 * PADDING
 WINDOWS_HEIGHT = GAME_HEIGHT + 2 * PADDING
 
-MOVE_SLEEP_TIME = 100
+MOVE_SLEEP_TIME = 200
 
 # Colors
 BACKGROUND_COLOR = (20, 20, 20)
@@ -49,11 +49,11 @@ RED = (255, 0, 0)
 RED_GHOST = (255, 0, 0, 100)
 
 TETROMINOS = {
-    'I': {'shape': [(-1, 0), (0, 0), (1, 0), (2, 0)], 'color': CYAN},
-    'J': {'shape': [(-1, -1), (-1, 0), (0, 0), (1, 0)], 'color': BLUE},
-    'L': {'shape': [(-1, 0), (0, 0), (1,0), (1, -1)], 'color': ORANGE},
+    'I': {'shape': [(0, 0), (-1, 0), (1, 0), (2, 0)], 'color': CYAN},
+    'J': {'shape': [(0, 0), (-1, -1), (-1, 0), (1, 0)], 'color': BLUE},
+    'L': {'shape': [(0, 0), (-1, 0), (1,0), (1, -1)], 'color': ORANGE},
     'O': {'shape': [(0, 0), (1, 0), (0, 1), (1, 1)], 'color': YELLOW},
-    'S': {'shape': [(-1, 1), (0, 1), (0, 0), (1, 0)], 'color': GREEN},
-    'Z': {'shape': [(-1, 0), (0, 0), (0, 1), (1, 1)], 'color': RED},
-    'T': {'shape': [(-1, 0), (0, 0), (0, -1), (1, 0)], 'color': PURPLE}
+    'S': {'shape': [(0, 0), (-1, 1), (0, 1), (1, 0)], 'color': GREEN},
+    'Z': {'shape': [(0, 0), (-1, 0), (0, 1), (1, 1)], 'color': RED},
+    'T': {'shape': [(0, 0), (-1, 0), (0, -1), (1, 0)], 'color': PURPLE}
 }

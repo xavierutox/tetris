@@ -32,6 +32,7 @@ class Game:
     
     def random_bag(self):
         bag = ['I', 'J', 'L', 'O', 'S', 'T', 'Z']
+        #bag = ['O']
         selected = []
         while len(bag) > 0:
             selected.append(choice(bag))
@@ -56,6 +57,7 @@ class Game:
             timer.update()
     
     def spawn_tetromino(self):
+        self.check_finished_lines()
         if len(self.next_pieces) == 0:
             self.next_pieces = self.random_bag()
         self.tetromino = Tetromino(self.next_pieces.pop(), self.sprites, self.spawn_tetromino, self.field_data)
@@ -76,12 +78,31 @@ class Game:
                 self.tetromino.hard_drop()
                 self.timers['horizontal move'].activate()
             elif keys[pygame.K_z] or keys[pygame.K_LCTRL]:
+                self.tetromino.counter_clock_wise_rotation()
                 self.timers['horizontal move'].activate()
-                pass
+            elif keys[pygame.K_UP]:
+                self.tetromino.clock_wise_rotation()
+                self.timers['horizontal move'].activate()
             elif keys[pygame.K_c] or keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]:
                 self.timers['horizontal move'].activate()
-                pass
-        
+    
+    def check_finished_lines(self):
+        for line in self.field_data:
+            if all(line):
+                for block in self.sprites:
+                    if block.pos.y == self.field_data.index(line) * SQUARE_SIZE:
+                        block.kill()
+                # move all lines above down one line
+                for block in self.sprites:
+                    block.pos.y += SQUARE_SIZE
+                        
+                self.field_data.remove(line)
+                self.field_data.insert(0, [0 for x in range(COLUMNS)])
+                self.level += 1
+                self.time = (0.8 - ((self.level - 1) * 0.007)) ** (self.level - 1) * 1000
+                self.timers['vertical move'].time = self.time
+                self.timers['vertical move'].activate()
+
         
         
 class Tetromino:
@@ -92,6 +113,7 @@ class Tetromino:
         self.preview = [Block(group, pos, self.color, field_data, True) for pos in self.block_positions]
         self.spawn_tetromino = spawn_tetromino
         self.field_data = field_data
+        self.shape = shape
     
     def move_down(self):
         if not self.vertical_collision():
@@ -105,6 +127,7 @@ class Tetromino:
     def hard_drop(self):
         while not self.vertical_collision():
             self.move_down()
+    
     
     def move_left(self):
         if not self.horizontal_collision('left'):
@@ -172,6 +195,56 @@ class Tetromino:
     def reset_ghost_height(self):
         for block in self.preview:
             block.pos.y = self.blocks[self.preview.index(block)].pos.y
+    
+    
+    def clock_wise_rotation(self):
+        self.reset_ghost_height()
+        if self.shape == 'O':
+            return
+        
+        # Todo: check if rotation is possible inside game area
+        
+        # check if rotation is possible
+        for block in self.blocks:
+            # field_data collition
+            if self.field_data[int(block.pos.y/SQUARE_SIZE)][int(block.pos.x/SQUARE_SIZE)] == 1:
+                return
+        
+        for block in self.blocks:
+            x = block.pos.x
+            y = block.pos.y
+            block.pos.x = self.blocks[0].pos.x + self.blocks[0].pos.y - y
+            block.pos.y = self.blocks[0].pos.y - self.blocks[0].pos.x + x
+        self.update_ghost()
+    
+    def counter_clock_wise_rotation(self):
+        self.reset_ghost_height()
+        if self.shape == 'O':
+            return
+        
+        # Todo: check if rotation is possible inside game area
+        
+        # check if rotation is possible
+        for block in self.blocks:
+            # field_data collition
+            if self.field_data[int(block.pos.y/SQUARE_SIZE)][int(block.pos.x/SQUARE_SIZE)] == 1:
+                return
+        for block in self.blocks:
+            x = block.pos.x
+            y = block.pos.y
+            block.pos.x = self.blocks[0].pos.x - self.blocks[0].pos.y + y
+            block.pos.y = self.blocks[0].pos.y + self.blocks[0].pos.x - x
+        self.update_ghost()
+    
+    def update_ghost(self):
+        for block in self.preview:
+            block.pos.x = self.blocks[self.preview.index(block)].pos.x
+            block.pos.y = self.blocks[self.preview.index(block)].pos.y
+        while not self.ghost_collision():
+            self.move_down_ghost()
+        for block in self.preview:
+            block.pos.y -= SQUARE_SIZE
+            
             
     
         
