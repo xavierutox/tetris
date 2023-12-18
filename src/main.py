@@ -28,8 +28,8 @@ class Main:
         # panels
         self.pieces = self.random_bag()
         self.preview = Preview(self.pieces)
-        self.game = Game(self.random_bag, self.pieces, self.get_level, self.get_combo, self.get_lines, self.update_level, self.update_lines, self.update_score, self.update_combo, self.get_stored_piece, self.set_stored_piece)
-        self.score = Score(self.get_level, self.get_lines, self.get_score, self.get_combo)
+        self.game = Game(self.random_bag, self.pieces, self.get_level, self.get_combo, self.get_lines, self.update_level, self.update_lines, self.update_score, self.update_combo, self.get_stored_piece, self.set_stored_piece, self.set_max_score, self.get_max_score,self.restart, self.get_score)
+        self.score = Score(self.get_level, self.get_lines, self.get_score, self.get_combo, self.get_max_score)
         self.store = Store(self.get_stored_piece)
         
         # loop music
@@ -122,9 +122,9 @@ class Main:
         self.combo_counter = -1
         self.pieces = self.random_bag()
         self.preview = Preview(self.pieces)
-        self.game = Game(self.random_bag, self.pieces, self.get_level, self.get_combo, self.get_lines, self.update_level, self.update_lines, self.update_score, self.update_combo)
-        self.score = Score(self.get_level, self.get_lines, self.get_score, self.get_combo)
-        self.store = Store()
+        self.game = Game(self.random_bag, self.pieces, self.get_level, self.get_combo, self.get_lines, self.update_level, self.update_lines, self.update_score, self.update_combo, self.get_stored_piece, self.set_stored_piece, self.set_max_score, self.get_max_score,self.restart, self.get_score)
+        self.score = Score(self.get_level, self.get_lines, self.get_score, self.get_combo, self.get_max_score)
+        self.store = Store(self.get_stored_piece)
         pygame.mixer.music.load('music.mp3')
         pygame.mixer.music.play(-1)
         

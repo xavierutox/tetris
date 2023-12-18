@@ -3,7 +3,7 @@ import pygame
 from timer import Timer
 
 class Game:
-    def __init__(self, random_bag, pieces, get_level, get_combo, get_lines, update_level, update_lines, update_score, update_combo, get_stored_piece, set_stored_piece):
+    def __init__(self, random_bag, pieces, get_level, get_combo, get_lines, update_level, update_lines, update_score, update_combo, get_stored_piece, set_stored_piece, set_max_score, get_max_score, restart, get_score):
         
         self.surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
         self.display_surface = pygame.display.get_surface()
@@ -14,6 +14,10 @@ class Game:
         self.update_lines = update_lines
         self.update_score = update_score
         self.update_combo = update_combo
+        self.set_max_score = set_max_score
+        self.get_max_score = get_max_score
+        self.get_score = get_score
+        self.restart = restart
         self.random_bag = random_bag
         self.next_pieces = pieces
         self.get_combo = get_combo
@@ -56,6 +60,8 @@ class Game:
         # if tetrnimo is in the vertical pos 0
         if all([block.pos.y >= 0 for block in self.tetromino.blocks]):
             self.tetromino.hard_drop_ghost()
+        
+        self.check_game_over()
         
     def timer_update(self):
         for timer in self.timers.values():
@@ -182,6 +188,16 @@ class Game:
                 block.kill()
             self.tetromino = Tetromino(self.get_stored_piece(), self.sprites, self.ghost_sprites, self.spawn_tetromino, self.field_data, self.update_score)
             self.set_stored_piece(temp)
+    
+    
+    def check_game_over(self):
+        first_row = self.field_data[0]
+        center = int(len(first_row)/2)
+        if any(first_row[center-1:center+2]):
+            if self.get_score() > self.get_max_score():
+                self.set_max_score(self.get_score())
+            self.restart()
+            
         
 
 class Tetromino:
