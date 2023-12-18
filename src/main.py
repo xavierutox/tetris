@@ -37,7 +37,7 @@ class Main:
             
             
             pygame.display.update()
-            self.clock.tick(60)
+            self.clock.tick()
         
 if __name__ == "__main__":
     main = Main()
