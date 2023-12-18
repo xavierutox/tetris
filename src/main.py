@@ -31,6 +31,11 @@ class Main:
         self.score = Score(self.get_level, self.get_lines, self.get_score, self.get_combo)
         self.store = Store()
         
+        # loop music
+        pygame.mixer.music.load('music.mp3')
+        pygame.mixer.music.play(-1)
+        
+        
        
         
     

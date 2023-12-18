@@ -19,7 +19,7 @@ class Score:
     def run(self):
         self.surface.fill(PANEL_BACKGROUND_COLOR)
         
-        for i, text in enumerate([('Score', str(self.get_score())), ('Level', str(self.get_level())), ('Lines', str(self.get_lines())), ('Combo', str(self.get_combo()))]):
+        for i, text in enumerate([('Score', str(self.get_score())), ('Level', str(self.get_level())), ('Lines', str(self.get_lines())), ('Combo', 0 if self.get_combo() <= 0 else str(self.get_combo()))]):
             x = self.surface.get_width() / 2
             y = self.increment_height * i + self.increment_height - 2 * PADDING
             
