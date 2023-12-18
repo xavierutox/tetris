@@ -1,27 +1,33 @@
-from settings import *
+from settings import GAME_HEIGHT, GAME_WIDTH, GRID_COLOR, PANEL_BACKGROUND_COLOR, TOP_LEFT_PANEL_WIDTH, PADDING, SQUARE_SIZE, OFFSET, COLUMNS, LINES, MOVE_SLEEP_TIME, TETROMINOS
+import pygame
 from timer import Timer
 
 class Game:
-    def __init__(self, random_bag, pieces, get_level, update_level, update_lines, update_score):
+    def __init__(self, random_bag, pieces, get_level, get_combo, get_lines, update_level, update_lines, update_score, update_combo):
         
         self.surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
         self.display_surface = pygame.display.get_surface()
         self.sprites = pygame.sprite.Group()
-        self.level = get_level()
+        self.ghost_sprites = pygame.sprite.Group()
+        self.get_level = get_level()
         self.update_level = update_level
         self.update_lines = update_lines
         self.update_score = update_score
+        self.update_combo = update_combo
         self.random_bag = random_bag
         self.next_pieces = pieces
+        self.get_combo = get_combo
+        self.get_lines = get_lines
         self.field_data = [[0 for x in range(COLUMNS)] for y in range(LINES)]
-        self.time = (0.8 - ((self.level - 1) * 0.007)) ** (self.level - 1) * 1000
+        self.time = (0.8 - ((self.get_level - 1) * 0.007)) ** (self.get_level - 1) * 1000
         self.spawn_tetromino()
+        self.combo = -1
         
         self.timers = {
-            'vertical move': Timer(self.time, True, self.move_down),
-            'horizontal move': Timer(MOVE_SLEEP_TIME),
+            'vertical_move_timer': Timer(self.time, True, self.move_down),
+            'key_timer': Timer(MOVE_SLEEP_TIME),
         }
-        self.timers['vertical move'].activate()
+        self.timers['vertical_move_timer'].activate()
         
     def draw_grid(self):
         pygame.draw.rect(self.surface, GRID_COLOR, (0, 0, GAME_WIDTH, GAME_HEIGHT), 1)
@@ -36,13 +42,18 @@ class Game:
     def run(self):
         self.surface.fill(PANEL_BACKGROUND_COLOR)
         self.sprites.draw(self.surface)
+        self.ghost_sprites.draw(self.surface)
         
         self.draw_grid()
         self.display_surface.blit(self.surface, (TOP_LEFT_PANEL_WIDTH + 2*PADDING, PADDING))
         self.input()
         self.timer_update()
         self.sprites.update()
-        self.tetromino.hard_drop_ghost()
+        self.ghost_sprites.update()
+        
+        # if tetrnimo is in the vertical pos 0
+        if all([block.pos.y >= 0 for block in self.tetromino.blocks]):
+            self.tetromino.hard_drop_ghost()
         
     def timer_update(self):
         for timer in self.timers.values():
@@ -52,60 +63,117 @@ class Game:
         self.check_finished_lines()
         if len(self.next_pieces) == 0:
             self.next_pieces = self.random_bag()
-        self.tetromino = Tetromino(self.next_pieces.pop(), self.sprites, self.spawn_tetromino, self.field_data)
+        self.tetromino = Tetromino(self.next_pieces.pop(), self.sprites, self.ghost_sprites, self.spawn_tetromino, self.field_data, self.update_score)
     
     def input(self):
-        if not self.timers['horizontal move'].active:
+        if not self.timers['key_timer'].active:
             keys = pygame.key.get_pressed()
             if keys[pygame.K_DOWN]:
                 self.tetromino.move_down()
-                self.timers['horizontal move'].activate()
+                self.update_score(1)
+                self.timers['key_timer'].activate()
             elif keys[pygame.K_LEFT]:
                 self.tetromino.move_left()
-                self.timers['horizontal move'].activate()
+                self.timers['key_timer'].activate()
             elif keys[pygame.K_RIGHT]:
                 self.tetromino.move_right()
-                self.timers['horizontal move'].activate()
+                self.timers['key_timer'].activate()
             elif keys[pygame.K_SPACE]:
                 self.tetromino.hard_drop()
-                self.timers['horizontal move'].activate()
+                self.timers['key_timer'].activate()
             elif keys[pygame.K_z] or keys[pygame.K_LCTRL]:
                 self.tetromino.counter_clock_wise_rotation()
-                self.timers['horizontal move'].activate()
+                self.timers['key_timer'].activate()
             elif keys[pygame.K_UP]:
                 self.tetromino.clock_wise_rotation()
-                self.timers['horizontal move'].activate()
+                self.timers['key_timer'].activate()
             elif keys[pygame.K_c] or keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]:
-                self.timers['horizontal move'].activate()
+                self.timers['key_timer'].activate()
     
     def check_finished_lines(self):
-        for line in self.field_data:
-            if all(line):
+        # delete ghost blocks
+        line_collitions_counter = 0
+        
+        for block in self.ghost_sprites:
+            block.kill()
+        
+        delete_rows = []
+        for i, row in enumerate(self.field_data):
+            if all(row):
+                delete_rows.append(i)
+                
+        if delete_rows:
+            for delete_row in delete_rows:
+                self.update_combo(self.get_combo() + 1)
                 for block in self.sprites:
-                    if block.pos.y == self.field_data.index(line) * SQUARE_SIZE:
+                    if block.pos.y == delete_row * SQUARE_SIZE:
                         block.kill()
-                # move all lines above down one line
-                for block in self.sprites:
-                    block.pos.y += SQUARE_SIZE
-                        
-                self.field_data.remove(line)
-                self.field_data.insert(0, [0 for x in range(COLUMNS)])
-                self.level += 1
-                self.time = (0.8 - ((self.level - 1) * 0.007)) ** (self.level - 1) * 1000
-                self.timers['vertical move'].time = self.time
-                self.timers['vertical move'].activate()
 
+                # move down blocks
+                for row in self.field_data:
+                    for block in row:
+                        if block and block.pos.y < delete_row * SQUARE_SIZE:
+                            block.pos.y += SQUARE_SIZE
+
+            # rebuild field_data
+            self.field_data = [[0 for x in range(COLUMNS)] for y in range(LINES)]
+            for blocks in self.sprites:
+                self.field_data[int(blocks.pos.y/SQUARE_SIZE)][int(blocks.pos.x/SQUARE_SIZE)] = block
+                
+        else:
+            self.update_combo(-1)
         
+        # update lines
+        self.update_lines(len(delete_rows))
+        # check if level up (10 lines)
+        if self.get_lines() % 10 == 0 and self.get_lines() != 0:
+            print('level up')
+            self.update_level(1)
+            self.time = (0.8 - ((self.get_level - 1) * 0.007)) ** (self.get_level - 1) * 1000
+            self.timers['vertical_move_timer'].time = self.time
+            self.timers['vertical_move_timer'].activate()
+            
+        # check if field is empty
+        perfect_clear = True
+        for line in self.field_data:
+            if any(line):
+                perfect_clear = False
         
+        if perfect_clear:
+            if line_collitions_counter == 1:
+                self.update_score(800 * self.get_level)
+            elif line_collitions_counter == 2:
+                self.update_score(1200 * self.get_level)
+            elif line_collitions_counter == 3:
+                self.update_score(1800 * self.get_level)
+            elif line_collitions_counter == 4:
+                self.update_score(2000 * self.get_level)
+        else:
+        
+            if line_collitions_counter == 1:
+                self.update_score(100 * self.get_level)
+            elif line_collitions_counter == 2:
+                self.update_score(300 * self.get_level)
+            elif line_collitions_counter == 3:
+                self.update_score(500 * self.get_level)
+            elif line_collitions_counter == 4:
+                self.update_score(800 * self.get_level)
+        
+        # combo
+        if self.get_combo() > 0:
+            self.update_score(50 * self.get_combo() * self.get_level)
+        
+
 class Tetromino:
-    def __init__(self, shape, group, spawn_tetromino, field_data):
+    def __init__(self, shape, group, ghost_group, spawn_tetromino, field_data,update_score):
         self.block_positions = TETROMINOS[shape]['shape']
         self.color = TETROMINOS[shape]['color']
         self.blocks = [Block(group, pos, self.color, field_data) for pos in self.block_positions]
-        self.preview = [Block(group, pos, self.color, field_data, True) for pos in self.block_positions]
+        self.preview = [Block(ghost_group, pos, self.color, field_data, True) for pos in self.block_positions]
         self.spawn_tetromino = spawn_tetromino
         self.field_data = field_data
         self.shape = shape
+        self.update_score = update_score
     
     def move_down(self):
         if not self.vertical_collision():
@@ -113,11 +181,12 @@ class Tetromino:
                 block.pos.y += SQUARE_SIZE
         else:
             for block in self.blocks:
-                self.field_data[int(block.pos.y/SQUARE_SIZE)][int(block.pos.x/SQUARE_SIZE)] = 1
+                self.field_data[int(block.pos.y/SQUARE_SIZE)][int(block.pos.x/SQUARE_SIZE)] = block
             self.spawn_tetromino()
     
     def hard_drop(self):
         while not self.vertical_collision():
+            self.update_score(2)
             self.move_down()
     
     
@@ -144,13 +213,13 @@ class Tetromino:
                 if block.pos.x - SQUARE_SIZE < 0:
                     return True
                 # field_data collition
-                if self.field_data[int(block.pos.y/SQUARE_SIZE)][int(block.pos.x/SQUARE_SIZE) - 1] == 1:
+                if self.field_data[int(block.pos.y/SQUARE_SIZE)][int(block.pos.x/SQUARE_SIZE) - 1]:
                     return True
             elif direction == 'right':
                 if block.pos.x + SQUARE_SIZE >= GAME_WIDTH:
                     return True
                 # field_data collition
-                if self.field_data[int(block.pos.y/SQUARE_SIZE)][int(block.pos.x/SQUARE_SIZE) + 1] == 1:
+                if self.field_data[int(block.pos.y/SQUARE_SIZE)][int(block.pos.x/SQUARE_SIZE) + 1]:
                     return True
     
     def vertical_collision(self):
@@ -158,7 +227,7 @@ class Tetromino:
             if block.pos.y + SQUARE_SIZE >= GAME_HEIGHT:
                 return True
             # field_data collition
-            if self.field_data[int(block.pos.y/SQUARE_SIZE) + 1][int(block.pos.x/SQUARE_SIZE)] == 1 and block.pos.y >= 0:
+            if self.field_data[int(block.pos.y/SQUARE_SIZE) + 1][int(block.pos.x/SQUARE_SIZE)] and block.pos.y >= 0:
                 return True
         return False
 
@@ -167,7 +236,7 @@ class Tetromino:
             if block.pos.y + SQUARE_SIZE >= GAME_HEIGHT:
                 return True
             # field_data collition
-            if self.field_data[int(block.pos.y/SQUARE_SIZE) + 1][int(block.pos.x/SQUARE_SIZE)] == 1 and block.pos.y >= 0:
+            if self.field_data[int(block.pos.y/SQUARE_SIZE) + 1][int(block.pos.x/SQUARE_SIZE)] and block.pos.y >= 0:
                 return True
         return False
     
@@ -193,18 +262,27 @@ class Tetromino:
         self.reset_ghost_height()
         if self.shape == 'O':
             return
-        
-        # Todo: check if rotation is possible inside game area
-        
+            
         # check if rotation is possible
         for block in self.blocks:
             # field_data collition
-            if self.field_data[int(block.pos.y/SQUARE_SIZE)][int(block.pos.x/SQUARE_SIZE)] == 1:
+            if self.field_data[int(block.pos.y/SQUARE_SIZE)][int(block.pos.x/SQUARE_SIZE)]:
+                return
+            
+        for block in self.blocks:
+            x = block.pos.x
+            y = block.pos.y
+            
+            # check if rotation is possible
+            if block.pos.x + self.blocks[0].pos.y - y < 0 or block.pos.x + self.blocks[0].pos.y - y >= GAME_WIDTH:
+                return
+            if block.pos.y - self.blocks[0].pos.x + x < 0 or block.pos.y - self.blocks[0].pos.x + x >= GAME_HEIGHT:
                 return
         
         for block in self.blocks:
             x = block.pos.x
             y = block.pos.y
+
             block.pos.x = self.blocks[0].pos.x + self.blocks[0].pos.y - y
             block.pos.y = self.blocks[0].pos.y - self.blocks[0].pos.x + x
         self.update_ghost()
@@ -214,16 +292,25 @@ class Tetromino:
         if self.shape == 'O':
             return
         
-        # Todo: check if rotation is possible inside game area
-        
         # check if rotation is possible
         for block in self.blocks:
             # field_data collition
-            if self.field_data[int(block.pos.y/SQUARE_SIZE)][int(block.pos.x/SQUARE_SIZE)] == 1:
+            if self.field_data[int(block.pos.y/SQUARE_SIZE)][int(block.pos.x/SQUARE_SIZE)]:
                 return
+            
         for block in self.blocks:
             x = block.pos.x
             y = block.pos.y
+            # check if rotation is possible
+            if block.pos.x - self.blocks[0].pos.y + y < 0 or block.pos.x - self.blocks[0].pos.y + y >= GAME_WIDTH:
+                return
+            if block.pos.y + self.blocks[0].pos.x - x < 0 or block.pos.y + self.blocks[0].pos.x - x >= GAME_HEIGHT:
+                return
+        
+        for block in self.blocks:
+            x = block.pos.x
+            y = block.pos.y
+            
             block.pos.x = self.blocks[0].pos.x - self.blocks[0].pos.y + y
             block.pos.y = self.blocks[0].pos.y + self.blocks[0].pos.x - x
         self.update_ghost()

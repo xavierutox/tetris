@@ -15,7 +15,7 @@ GAME_HEIGHT = LINES * SQUARE_SIZE
 
 # Top Left panel (score, level and lines)
 TOP_LEFT_PANEL_WIDTH = 150
-TOP_LEFT_PANEL_FRACTION = 0.3
+TOP_LEFT_PANEL_FRACTION = 0.4
 TOP_LEFT_PANEL_HEIGHT = GAME_HEIGHT * TOP_LEFT_PANEL_FRACTION
 
 # Bottom left panel (stored piece)
@@ -37,6 +37,7 @@ MOVE_SLEEP_TIME = 200
 # Colors
 BACKGROUND_COLOR = (20, 20, 20)
 PANEL_BACKGROUND_COLOR = (40, 40, 40)
+TEXT_COLOR = (255, 255, 255)
 GRID_COLOR = (80, 80, 80)
 PURPLE = (128, 0, 128)
 PURPLE_GHOST = (128, 0, 128, 100)
@@ -52,6 +53,8 @@ GREEN = (0, 255, 0)
 GREEN_GHOST = (0, 255, 0, 100)
 RED = (255, 0, 0)
 RED_GHOST = (255, 0, 0, 100)
+
+FONT_SIZE = 30
 
 TETROMINOS = {
     'I': {'shape': [(0, 0), (-1, 0), (1, 0), (2, 0)], 'color': CYAN},
