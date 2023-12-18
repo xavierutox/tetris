@@ -135,9 +135,7 @@ class Game:
         
         # update lines
         self.update_lines(len(delete_rows))
-        # check if level up (10 lines)
-        if self.get_lines() % 10 == 0 and self.get_lines() != 0:
-            print('level up')
+        if self.get_lines() % 10 == 0 and self.get_lines() != 0 and len(delete_rows) != 0:
             self.update_level(1)
             self.time = (0.8 - ((self.get_level - 1) * 0.007)) ** (self.get_level - 1) * 1000
             self.timers['vertical_move_timer'].time = self.time
