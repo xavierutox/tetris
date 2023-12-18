@@ -28,6 +28,7 @@ class Game:
         self.time = (0.8 - ((self.get_level - 1) * 0.007)) ** (self.get_level - 1) * 1000
         self.spawn_tetromino()
         self.combo = -1
+        self.store_lock = False
         
         self.timers = {
             'vertical_move_timer': Timer(self.time, True, self.move_down),
@@ -101,7 +102,7 @@ class Game:
     
     def check_finished_lines(self):
         # delete ghost blocks
-        line_collitions_counter = 0
+        self.store_lock = False
         
         for block in self.ghost_sprites:
             block.kill()
@@ -149,23 +150,23 @@ class Game:
                 perfect_clear = False
         
         if perfect_clear:
-            if line_collitions_counter == 1:
+            if len(delete_rows) == 1:
                 self.update_score(800 * self.get_level)
-            elif line_collitions_counter == 2:
+            elif len(delete_rows) == 2:
                 self.update_score(1200 * self.get_level)
-            elif line_collitions_counter == 3:
+            elif len(delete_rows) == 3:
                 self.update_score(1800 * self.get_level)
-            elif line_collitions_counter == 4:
+            elif len(delete_rows) == 4:
                 self.update_score(2000 * self.get_level)
         else:
         
-            if line_collitions_counter == 1:
+            if len(delete_rows) == 1:
                 self.update_score(100 * self.get_level)
-            elif line_collitions_counter == 2:
+            elif len(delete_rows) == 2:
                 self.update_score(300 * self.get_level)
-            elif line_collitions_counter == 3:
+            elif len(delete_rows) == 3:
                 self.update_score(500 * self.get_level)
-            elif line_collitions_counter == 4:
+            elif len(delete_rows) == 4:
                 self.update_score(800 * self.get_level)
         
         # combo
@@ -173,21 +174,23 @@ class Game:
             self.update_score(50 * self.get_combo() * self.get_level)
     
     def handle_store(self):
-        for block in self.ghost_sprites:
-            block.kill()
-            
-        if self.get_stored_piece() == None:
-            self.set_stored_piece(self.tetromino.shape)
-            for block in self.tetromino.blocks:
+        if not self.store_lock:
+            self.store_lock = True
+            for block in self.ghost_sprites:
                 block.kill()
-            
-            self.spawn_tetromino()
-        else:
-            temp = self.tetromino.shape
-            for block in self.tetromino.blocks:
-                block.kill()
-            self.tetromino = Tetromino(self.get_stored_piece(), self.sprites, self.ghost_sprites, self.spawn_tetromino, self.field_data, self.update_score)
-            self.set_stored_piece(temp)
+                
+            if self.get_stored_piece() == None:
+                self.set_stored_piece(self.tetromino.shape)
+                for block in self.tetromino.blocks:
+                    block.kill()
+                
+                self.spawn_tetromino()
+            else: 
+                temp = self.tetromino.shape
+                for block in self.tetromino.blocks:
+                    block.kill()
+                self.tetromino = Tetromino(self.get_stored_piece(), self.sprites, self.ghost_sprites, self.spawn_tetromino, self.field_data, self.update_score)
+                self.set_stored_piece(temp)
     
     
     def check_game_over(self):
