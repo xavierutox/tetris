@@ -28,20 +28,24 @@ class Main:
         # panels
         self.pieces = self.random_bag()
         self.preview = Preview(self.pieces)
-        self.game = Game(self.random_bag, self.pieces, self.get_level, self.get_combo, self.get_lines, self.update_level, self.update_lines, self.update_score, self.update_combo)
+        self.game = Game(self.random_bag, self.pieces, self.get_level, self.get_combo, self.get_lines, self.update_level, self.update_lines, self.update_score, self.update_combo, self.get_stored_piece, self.set_stored_piece)
         self.score = Score(self.get_level, self.get_lines, self.get_score, self.get_combo)
-        self.store = Store()
+        self.store = Store(self.get_stored_piece)
         
         # loop music
         pygame.mixer.music.load('music.mp3')
         pygame.mixer.music.play(-1)
         
+        # Store
+        self.stored_piece = None
+        
         
        
         
     
-    def random_bag(self):
+    def random_bag(self, stored_piece=None):
         bag = ['I', 'J', 'L', 'O', 'S', 'T', 'Z']
+        bag.remove(stored_piece) if stored_piece is not None else None
         selected = []
         while len(bag) > 0:
             selected.append(choice(bag))
@@ -72,6 +76,18 @@ class Main:
     
     def update_combo(self, combo):
         self.combo_counter = combo
+    
+    def get_stored_piece(self):
+        return self.stored_piece
+    
+    def set_stored_piece(self, piece):
+        self.stored_piece = piece
+        
+    def get_max_score(self):
+        return self.max_score
+    
+    def set_max_score(self, score):
+        self.max_score = score
 
 
     def run(self):
