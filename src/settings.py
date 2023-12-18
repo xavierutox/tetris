@@ -54,6 +54,8 @@ GREEN_GHOST = (0, 255, 0, 100)
 RED = (255, 0, 0)
 RED_GHOST = (255, 0, 0, 100)
 
+FONT_SIZE = 30
+
 TETROMINOS = {
     'I': {'shape': [(0, 0), (-1, 0), (1, 0), (2, 0)], 'color': CYAN},
     'J': {'shape': [(0, 0), (-1, -1), (-1, 0), (1, 0)], 'color': BLUE},

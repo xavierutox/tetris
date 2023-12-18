@@ -1,4 +1,4 @@
-from settings import TOP_LEFT_PANEL_FRACTION, TOP_LEFT_PANEL_HEIGHT, TOP_LEFT_PANEL_WIDTH, GRID_COLOR, PANEL_BACKGROUND_COLOR, PADDING, TEXT_COLOR
+from settings import TOP_LEFT_PANEL_HEIGHT, TOP_LEFT_PANEL_WIDTH, GRID_COLOR, PANEL_BACKGROUND_COLOR, PADDING, TEXT_COLOR, FONT_SIZE
 import pygame
 
 class Score:
@@ -13,7 +13,7 @@ class Score:
         
         pygame.draw.rect(self.surface, GRID_COLOR, (0, 0, TOP_LEFT_PANEL_WIDTH, TOP_LEFT_PANEL_HEIGHT), 1)
         
-        self.font = pygame.font.SysFont('Arial', 30)
+        self.font = pygame.font.SysFont('Arial', FONT_SIZE)
         self.increment_height = self.surface.get_height() // 4
         
         
