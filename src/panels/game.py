@@ -3,13 +3,13 @@ import pygame
 from timer import Timer
 
 class Game:
-    def __init__(self, random_bag, pieces, get_level, get_combo, get_lines, update_level, update_lines, update_score, update_combo, get_stored_piece, set_stored_piece, set_max_score, get_max_score, restart, get_score):
+    def __init__(self, random_bag, pieces, get_level, get_combo, get_lines, update_level, update_lines, update_score, update_combo, get_stored_piece, set_stored_piece, set_max_score, get_max_score, restart, get_score, stop_music):
         
         self.surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
         self.display_surface = pygame.display.get_surface()
         self.sprites = pygame.sprite.Group()
         self.ghost_sprites = pygame.sprite.Group()
-        self.get_level = get_level()
+        self.get_level = get_level
         self.update_level = update_level
         self.update_lines = update_lines
         self.update_score = update_score
@@ -24,8 +24,9 @@ class Game:
         self.get_lines = get_lines
         self.get_stored_piece = get_stored_piece
         self.set_stored_piece = set_stored_piece
+        self.stop_music = stop_music
         self.field_data = [[0 for x in range(COLUMNS)] for y in range(LINES)]
-        self.time = (0.8 - ((self.get_level - 1) * 0.007)) ** (self.get_level - 1) * 1000
+        self.time = (0.8 - ((self.get_level() - 1) * 0.007)) ** (self.get_level() - 1) * 1000
         self.spawn_tetromino()
         self.combo = -1
         self.store_lock = False
@@ -52,17 +53,19 @@ class Game:
         self.ghost_sprites.draw(self.surface)
         
         self.draw_grid()
+        self.check_game_over()
         self.display_surface.blit(self.surface, (TOP_LEFT_PANEL_WIDTH + 2*PADDING, PADDING))
         self.input()
         self.timer_update()
         self.sprites.update()
         self.ghost_sprites.update()
         
+        
         # if tetrnimo is in the vertical pos 0
         if all([block.pos.y >= 0 for block in self.tetromino.blocks]):
             self.tetromino.hard_drop_ghost()
         
-        self.check_game_over()
+        
         
     def timer_update(self):
         for timer in self.timers.values():
@@ -137,7 +140,7 @@ class Game:
         self.update_lines(len(delete_rows))
         if self.get_lines() % 10 == 0 and self.get_lines() != 0 and len(delete_rows) != 0:
             self.update_level(1)
-            self.time = (0.8 - ((self.get_level - 1) * 0.007)) ** (self.get_level - 1) * 1000
+            self.time = (0.8 - ((self.get_level() - 1) * 0.007)) ** (self.get_level() - 1) * 1000
             self.timers['vertical_move_timer'].time = self.time
             self.timers['vertical_move_timer'].activate()
             
@@ -149,27 +152,27 @@ class Game:
         
         if perfect_clear:
             if len(delete_rows) == 1:
-                self.update_score(800 * self.get_level)
+                self.update_score(800 * self.get_level())
             elif len(delete_rows) == 2:
-                self.update_score(1200 * self.get_level)
+                self.update_score(1200 * self.get_level())
             elif len(delete_rows) == 3:
-                self.update_score(1800 * self.get_level)
+                self.update_score(1800 * self.get_level())
             elif len(delete_rows) == 4:
-                self.update_score(2000 * self.get_level)
+                self.update_score(2000 * self.get_level())
         else:
         
             if len(delete_rows) == 1:
-                self.update_score(100 * self.get_level)
+                self.update_score(100 * self.get_level())
             elif len(delete_rows) == 2:
-                self.update_score(300 * self.get_level)
+                self.update_score(300 * self.get_level())
             elif len(delete_rows) == 3:
-                self.update_score(500 * self.get_level)
+                self.update_score(500 * self.get_level())
             elif len(delete_rows) == 4:
-                self.update_score(800 * self.get_level)
+                self.update_score(800 * self.get_level())
         
         # combo
         if self.get_combo() > 0:
-            self.update_score(50 * self.get_combo() * self.get_level)
+            self.update_score(50 * self.get_combo() * self.get_level())
     
     def handle_store(self):
         if not self.store_lock:
@@ -197,7 +200,42 @@ class Game:
         if any(first_row[center-1:center+2]):
             if self.get_score() > self.get_max_score():
                 self.set_max_score(self.get_score())
-            self.restart()
+            self.draw_game_over()
+            self.stop_music()
+    
+    def draw_game_over(self):
+        # draw a rectangle over the game with the score and level. It says game over, press R to restart. Pause the game
+        
+        self.timers['vertical_move_timer'].deactivate()
+        
+        self.surface.fill((0,0,0,100))
+        font = pygame.font.SysFont('Arial', 50)
+        text_surface = font.render("Game Over", True, (255,255,255))
+        text_rect = text_surface.get_rect(center=(GAME_WIDTH/2, GAME_HEIGHT/3))
+        self.surface.blit(text_surface, text_rect)
+        
+        font = pygame.font.SysFont('Arial', 30)
+        text_surface = font.render("Press R to restart", True, (255,255,255))
+        text_rect = text_surface.get_rect(center=(GAME_WIDTH/2, GAME_HEIGHT/3 + 50))
+        self.surface.blit(text_surface, text_rect)
+        
+        font = pygame.font.SysFont('Arial', 30)
+        text_surface = font.render(f"Score: {self.get_score()}", True, (255,255,255))
+        text_rect = text_surface.get_rect(center=(GAME_WIDTH/2, GAME_HEIGHT/3 + 100))
+        self.surface.blit(text_surface, text_rect)
+        
+        font = pygame.font.SysFont('Arial', 30)
+        text_surface = font.render(f"Max Score: {self.get_max_score()}", True, (255,255,255))
+        text_rect = text_surface.get_rect(center=(GAME_WIDTH/2, GAME_HEIGHT/3 + 150))
+        self.surface.blit(text_surface, text_rect)
+        
+        font = pygame.font.SysFont('Arial', 30)
+        text_surface = font.render(f"Level: {self.get_level()}", True, (255,255,255))
+        text_rect = text_surface.get_rect(center=(GAME_WIDTH/2, GAME_HEIGHT/3 + 200))
+        self.surface.blit(text_surface, text_rect)
+        
+        
+            
             
         
 
@@ -359,12 +397,7 @@ class Tetromino:
         while not self.ghost_collision():
             self.move_down_ghost()
         for block in self.preview:
-            block.pos.y -= SQUARE_SIZE
-            
-            
-    
-        
-    
+            block.pos.y -= SQUARE_SIZE    
     
 class Block(pygame.sprite.Sprite):
         def __init__(self, group, pos, color, field_data, ghost=False):
