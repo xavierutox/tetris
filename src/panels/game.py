@@ -73,8 +73,8 @@ class Game:
     
     def spawn_tetromino(self):
         self.check_finished_lines()
-        if len(self.next_pieces) == 0:
-            self.next_pieces = self.random_bag(self.get_stored_piece())
+        if len(self.next_pieces) < 4:
+            self.next_pieces = self.random_bag(self.get_stored_piece(), True)
         self.tetromino = Tetromino(self.next_pieces.pop(), self.sprites, self.ghost_sprites, self.spawn_tetromino, self.field_data, self.update_score)
 
         push_down = False
