@@ -45,13 +45,17 @@ class Main:
         
         
     
-    def random_bag(self, stored_piece=None):
+    def random_bag(self, stored_piece=None, extend=None):
         bag = ['I', 'J', 'L', 'O', 'S', 'T', 'Z']
         bag.remove(stored_piece) if stored_piece is not None else None
         selected = []
         while len(bag) > 0:
             selected.append(choice(bag))
             bag.remove(selected[-1])
+        
+        if extend:
+            for piece in self.pieces:
+                selected.append(piece)
         self.pieces = selected
         return selected
 
