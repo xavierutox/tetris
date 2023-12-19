@@ -3,7 +3,7 @@ import pygame
 COLUMNS = 10
 LINES = 20
 SQUARE_SIZE = 40
-OFFSET = pygame.Vector2(COLUMNS // 2, -1) * SQUARE_SIZE
+OFFSET = pygame.Vector2(COLUMNS // 2, 0) * SQUARE_SIZE
 
 PREVIEW_1_POS_OFFSET = pygame.Vector2(1, 0) * SQUARE_SIZE
 PREVIEW_2_POS_OFFSET = pygame.Vector2(1, 4) * SQUARE_SIZE
